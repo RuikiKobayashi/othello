@@ -1,10 +1,14 @@
 # othello
 オセロです.
+
 othello.pyを動かせばオセロが出来ます。
+
 UI等はまだ作っていないため，標準入力でプレイします。
 
 numpy
+
 tesorflow
+
 keras
 ．
 <details>
