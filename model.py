@@ -2,19 +2,17 @@ import keras
 from keras.layers import Activation, Conv2D, Flatten, Dense, BatchNormalization, add
 from keras import backend as K
 import tensorflow as tf
-import config
 
 BOARD_SIZE = 8
-NUM_FILTERS = 64
+NUM_FILTERS = 128
 CHANNELS = 3
-BLOCKS = 8
+BLOCKS = 16
 BATCH_SIZE = 64
-EPOCHS = config.EPOCHS
-LEARNING_RATE = config.LEARNING_RATE
 
 class Model:
-    def __init__(self, make_predict=True):
-        print("反映される?")
+    def __init__(self, epochs = 32, rate = 1e-4,make_predict=True):
+        self.epochs = epochs
+        self.rate = rate
         self.build(make_predict)
         self.compile()
 
@@ -58,16 +56,16 @@ class Model:
             self.model.make_predict_function()
 
     def compile(self):
-        self.model.compile(loss={'policy': 'categorical_crossentropy', 'value': 'mean_squared_error'},
+        self.model.compile(loss={'policy': 'sparse_categorical_crossentropy', 'value': 'mean_squared_error'},
                            loss_weights={'policy': 0.3, 'value': 0.7},
-                           optimizer=keras.optimizers.Adam(lr=LEARNING_RATE, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0, amsgrad=False),
+                           optimizer=keras.optimizers.Adam(lr=self.rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0, amsgrad=False),
                            metrics=['accuracy'])
 
     def fit(self, dataS,dataP,dataV):
         # state = dataS.reshape([-1, 3, 8, 8])
         self.model.fit(dataS, [dataP, dataV],
                        validation_split=0.05,
-                       epochs=EPOCHS,
+                       epochs=self.epochs,
                        batch_size=BATCH_SIZE,
                        verbose=2)
 

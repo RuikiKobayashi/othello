@@ -1,13 +1,11 @@
 import math
 
 import numpy as np
-import config
-from core import Core
+from core_c import Core
 
 C_PUCT = 1.0
 NOISE_WEIGHT = 0.25
 NOISE_ALPHA = 0.5
-NUM_MCTS = config.NUM_MCTS
 
 
 class FakeNode:
@@ -87,19 +85,18 @@ class Node:
         features = np.zeros([3, 64], dtype=float)
         turn = self.turn
         if turn:
-            player = BitArray(self.game.white)
-            enemy = BitArray(self.game.black)
+            features[0] = BitArray(self.game.white)
+            features[1] = BitArray(self.game.black)
         else:
-            enemy = BitArray(self.game.white)
-            player = BitArray(self.game.black)
-        features[0] = player
-        features[1] = enemy
+            features[0] = BitArray(self.game.black)
+            features[1] = BitArray(self.game.white)
         features[2] = self.legalMoves
 
         return features
 
 class MCTSBatch:
-    def __init__(self, model):
+    def __init__(self, model, numMcts):
+        self.numMcts = numMcts
         self.model = model
 
     def select(self, nodes):
@@ -147,7 +144,7 @@ class MCTSBatch:
         self.backup(bestNodesBatch, vBatch)
     
     def alpha(self, nodes, temperature):
-        for i in range(NUM_MCTS):
+        for i in range(self.numMcts):
             self.search(nodes)
 
         piBatch = np.zeros([len(nodes), 64], dtype='f4')

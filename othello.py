@@ -1,5 +1,5 @@
-from core import Core
-from solver2 import moveAI,movebAI
+from core_c import Core
+from solver_c import moveAI,movebAI
 from alphabeta import moveAINN
 from model import Model
 import numpy as np
@@ -7,6 +7,13 @@ import random
 import time
 import model
 import mcts
+import tkinter as tk
+
+
+NUM_MCTS = 400
+NUM_GAMES = 1
+EPOCHS = 1
+RATE = 1e-4
 
 class Othello(Core):
 
@@ -14,13 +21,13 @@ class Othello(Core):
         self.start = time.time()
         super().__init__(0, 0x0000000810000000, 0x0000001008000000)
         self.model = Model()
-        self.model.load("model/Gen" + str(0))
+        #self.model.load('model/Gen' + str(0))
         self.score = 0
         self.table = {}
         self.currentNode = mcts.Node(mcts.FakeNode(), 0, 0, Core(self.turn, self.black, self.white))
         self.currentNode.isGameRoot = True
         self.currentNode.isSearchRoot = True
-        self.mctsBatch = mcts.MCTSBatch(self.model)
+        self.mctsBatch = mcts.MCTSBatch(self.model,NUM_MCTS)
 
     def ShowBoard(self):
         print("—" * 38)
@@ -74,19 +81,23 @@ class Othello(Core):
         #     self.currentNode = self.makeMove(self.currentNode,int(np.argmax(pi)))
         # nb, nw = self.Count()
         # nmTurn = 64 - nb - nw
-        # if nmTurn < 14:
-        #     site, socre, self.table = movebAI(self.black,self.white,self.turn, nmTurn, self.table, self.score)
-        #     self.score = socre
+        # if nmTurn < 16:
+        #     site, self.table = movebAI(self.black,self.white,self.turn, nmTurn, self.table, self.score)
         #     self.AddSite(site)
         # else:
-        #     while True:
-        #         move = random.randrange(0, 64)
-        #         site = 1 << move
-        #         if self.judge & site:
-        #             # self.AddSite(site)
-        #             self.currentNode = self.makeMove(self.currentNode,move)
-        #             break
-
+        #     self.currentNode = mcts.Node(mcts.FakeNode(), 0, self.turn, Core(self.turn, self.black, self.white))
+        #     self.currentNode.isGameRoot = True
+        #     self.currentNode.isSearchRoot = True
+        #     pi = self.mctsBatch.alpha([self.currentNode], 1)[0]
+        #     print(pi)
+        #     self.currentNode = self.makeMove(self.currentNode,int(np.argmax(pi)))
+        while True:
+            move = random.randrange(0, 64)
+            site = 1 << move
+            if self.judge & site:
+                # self.AddSite(site)
+                self.currentNode = self.makeMove(self.currentNode,move)
+                break
         # while True:
         #     rawSite = input('ij:(row, col) = (i, j), 0:undo  >>> ')
         #     try:
@@ -114,7 +125,7 @@ class Othello(Core):
     def InputEnemy(self):
         nb, nw = self.Count()
         nmTurn = 64 - nb - nw
-        if nmTurn < 14:
+        if nmTurn < 16:
             site, socre, self.table = moveAI(self.black,self.white,self.turn, nmTurn, self.table, self.score)
             self.score = socre
             self.AddSite(site)
@@ -125,7 +136,7 @@ class Othello(Core):
             self.currentNode = mcts.Node(mcts.FakeNode(), 0, self.turn, Core(self.turn, self.black, self.white))
             self.currentNode.isGameRoot = True
             self.currentNode.isSearchRoot = True
-            pi = self.mctsBatch.alpha([self.currentNode],  0.9 ** (nb + nw - 6))[0]
+            pi = self.mctsBatch.alpha([self.currentNode], 1)[0]
             print(pi)
             self.currentNode = self.makeMove(self.currentNode,int(np.argmax(pi)))
 
